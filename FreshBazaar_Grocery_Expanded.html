@@ -1,0 +1,1496 @@
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+          <style>
+            body { background-color: #050505; color: #ffffff; margin: 0; padding: 24px; font-family: system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+            ::-webkit-scrollbar { display: none; }
+          </style>
+          <script>
+            document.addEventListener('DOMContentLoaded', () => {
+              document.addEventListener('click', (e) => {
+                const link = e.target.closest('a');
+                if (link) {
+                  e.preventDefault();
+                }
+              });
+              document.addEventListener('submit', (e) => {
+                e.preventDefault();
+              });
+            });
+          </script>
+        </head>
+        <body>
+          <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshBazaar - Premium Online Grocery</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js for interactive state management -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased font-sans min-h-screen flex flex-col justify-between"
+      x-data="groceryApp()" x-init="init()">
+
+    <!-- TOP ANNOUNCEMENT BAR -->
+    <div class="bg-brand-800 text-white text-xs py-2 px-4 text-center font-medium flex justify-between items-center">
+        <span>⚡ Express 15-Minute Delivery in Major Indian Cities!</span>
+        <div class="flex items-center space-x-4">
+            <span><i class="fas fa-phone text-xs mr-1"></i> Helpline: 1800-123-GROCERY</span>
+            <span class="hidden md:inline">|</span>
+            <span class="hidden md:inline"><i class="fas fa-location-dot mr-1"></i> Delivering to: <b>Mumbai 400001</b></span>
+        </div>
+    </div>
+
+    <!-- MAIN NAVBAR -->
+    <header class="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" @click="currentView = 'store'">
+                    <div class="bg-brand-600 text-white p-2.5 rounded-2xl shadow-md">
+                        <i class="fas fa-shopping-basket text-2xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-2xl font-black tracking-tight text-gray-900">Fresh<span class="text-brand-600">Bazaar</span></span>
+                        <span class="block text-[10px] tracking-widest text-brand-700 font-bold uppercase -mt-1">India's Fresh Supermarket</span>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="hidden md:flex flex-1 max-w-lg mx-8 relative">
+                    <input type="text" x-model="searchQuery" placeholder="Search for fresh vegetables, fruits, dairy, spices..." 
+                           class="w-full bg-gray-100 border border-gray-300 rounded-full py-2.5 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition duration-200">
+                    <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    
+                    <!-- Module Workspace Quick Switcher (For Demo visibility) -->
+                    <template x-if="currentUser">
+                        <div class="relative" x-data="{ openRoleMenu: false }">
+                            <button @click="openRoleMenu = !openRoleMenu" 
+                                    class="flex items-center space-x-2 bg-emerald-50 text-brand-700 px-3 py-1.5 rounded-lg border border-brand-200 text-xs font-semibold hover:bg-emerald-100 transition">
+                                <i class="fas" :class="currentUser.role === 'customer' ? 'fa-user' : (currentUser.role === 'employee' ? 'fa-truck-ramp-box' : 'fa-user-tie')"></i>
+                                <span class="capitalize" x-text="currentUser.role + ' Portal'"></span>
+                                <i class="fas fa-chevron-down text-[10px]"></i>
+                            </button>
+                            <div x-show="openRoleMenu" @click.away="openRoleMenu = false" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-1 text-xs z-50">
+                                <button @click="switchPortal('customer'); openRoleMenu = false" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center"><i class="fas fa-shopping-bag text-brand-600 mr-2 w-4"></i> Customer Storefront</button>
+                                <button @click="switchPortal('employee'); openRoleMenu = false" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center"><i class="fas fa-clipboard-list text-blue-600 mr-2 w-4"></i> Employee Packing Desk</button>
+                                <button @click="switchPortal('manager'); openRoleMenu = false" class="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center"><i class="fas fa-chart-line text-purple-600 mr-2 w-4"></i> Manager Dashboard</button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Auth Button / Profile -->
+                    <template x-if="!currentUser">
+                        <button @click="openAuthModal('customer')" class="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium text-sm transition">
+                            <i class="fas fa-user-circle text-lg text-brand-600"></i>
+                            <span>Login / Register</span>
+                        </button>
+                    </template>
+                    
+                    <template x-if="currentUser">
+                        <div class="flex items-center space-x-2">
+                            <div class="text-right hidden sm:block">
+                                <p class="text-xs font-bold text-gray-800" x-text="currentUser.name"></p>
+                                <p class="text-[10px] text-gray-500 uppercase font-semibold" x-text="currentUser.role"></p>
+                            </div>
+                            <button @click="logout()" class="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition" title="Logout">
+                                <i class="fas fa-right-from-bracket"></i>
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Cart Trigger -->
+                    <button @click="isCartOpen = true" class="relative bg-brand-600 hover:bg-brand-700 text-white p-2.5 sm:px-4 sm:py-2.5 rounded-full flex items-center space-x-2 shadow-sm transition">
+                        <i class="fas fa-shopping-cart text-lg"></i>
+                        <span class="hidden sm:inline text-sm font-semibold">Cart</span>
+                        <span x-show="cartCount > 0" class="absolute -top-1 -right-1 bg-amber-500 text-white text-xs font-black rounded-full h-5 w-5 flex items-center justify-center border-2 border-white" x-text="cartCount"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MOBILE SEARCH BAR -->
+    <div class="md:hidden p-3 bg-white border-b border-gray-200">
+        <div class="relative">
+            <input type="text" x-model="searchQuery" placeholder="Search vegetables, snacks, spices..." 
+                   class="w-full bg-gray-100 border border-gray-200 rounded-full py-2 pl-10 pr-4 text-xs focus:outline-none focus:bg-white">
+            <i class="fas fa-search absolute left-3.5 top-2.5 text-gray-400 text-xs"></i>
+        </div>
+    </div>
+
+    <!-- MAIN BODY CONTENT -->
+    <main class="flex-grow">
+
+        <!-- MODULE 1: CUSTOMER STOREFRONT VIEW -->
+        <div x-show="currentView === 'store'">
+            
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-emerald-800 via-brand-700 to-teal-800 text-white py-8 px-4 sm:px-8 mb-8 relative overflow-hidden">
+                <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between relative z-10">
+                    <div class="mb-6 md:mb-0 max-w-xl text-center md:text-left">
+                        <span class="bg-amber-400 text-gray-900 text-xs font-black uppercase px-3 py-1 rounded-full inline-block mb-3">Grand Festival Sale 🇮🇳</span>
+                        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight">Fresh Farm Produce Delivered to Your Doorstep</h1>
+                        <p class="mt-2 text-emerald-100 text-sm sm:text-base">Get up to 40% OFF on Organic Vegetables, Fresh Fruits & Daily Staples with FREE delivery!</p>
+                        <div class="mt-5 flex flex-wrap justify-center md:justify-start gap-3">
+                            <a href="#products" class="bg-white text-brand-800 font-bold px-6 py-2.5 rounded-full shadow hover:bg-amber-300 transition text-sm">Shop Now</a>
+                            <button @click="openAuthModal('customer')" class="bg-brand-900/50 hover:bg-brand-900 text-white font-semibold px-5 py-2.5 rounded-full border border-emerald-400/30 text-sm">New User Offer</button>
+                        </div>
+                    </div>
+                    <div class="relative w-full max-w-xs md:max-w-md">
+                        <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&q=80" alt="Fresh Groceries" class="rounded-2xl shadow-2xl transform md:rotate-2 border-4 border-white/20 object-cover h-64 w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Slider / Filter -->
+            <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-th-large text-brand-600 mr-2"></i> Shop by Category
+                </h2>
+                <div class="flex space-x-3 overflow-x-auto pb-3 scrollbar-none">
+                    <button @click="selectedCategory = 'all'" 
+                            :class="selectedCategory === 'all' ? 'bg-brand-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'"
+                            class="px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition flex items-center space-x-2">
+                        <i class="fas fa-border-all"></i>
+                        <span>All Items</span>
+                    </button>
+                    <template x-for="cat in categories" :key="cat.id">
+                        <button @click="selectedCategory = cat.id" 
+                                :class="selectedCategory === cat.id ? 'bg-brand-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'"
+                                class="px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition flex items-center space-x-2">
+                            <i :class="cat.icon"></i>
+                            <span x-text="cat.name"></span>
+                        </button>
+                    </template>
+                </div>
+            </section>
+
+            <!-- Product Grid -->
+            <section id="products" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Featured Groceries</h2>
+                        <p class="text-xs text-gray-500">Handpicked items at guaranteed lowest prices</p>
+                    </div>
+                    <span class="text-xs font-semibold text-gray-500" x-text="filteredProducts.length + ' Items Available'"></span>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6">
+                    <template x-for="product in filteredProducts" :key="product.id">
+                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between overflow-hidden group">
+                            <div class="relative">
+                                <img :src="product.image" :alt="product.name" class="w-full h-36 sm:h-40 object-cover group-hover:scale-105 transition duration-300">
+                                <span class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full" x-text="product.discount + '% OFF'"></span>
+                                <span class="absolute top-2 right-2 bg-white/90 backdrop-blur-xs text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-200" x-text="product.unit"></span>
+                            </div>
+
+                            <div class="p-3 flex-1 flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600" x-text="product.category"></span>
+                                    <h3 class="font-bold text-gray-900 text-xs sm:text-sm leading-snug line-clamp-2 mt-0.5" x-text="product.name"></h3>
+                                    <div class="flex items-center text-amber-400 text-[10px] mt-1 space-x-1">
+                                        <i class="fas fa-star"></i>
+                                        <span class="font-bold text-gray-700" x-text="product.rating"></span>
+                                        <span class="text-gray-400" x-text="'(' + product.reviews + ')'"></span>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between">
+                                    <div>
+                                        <div class="text-sm sm:text-base font-extrabold text-gray-900">₹<span x-text="product.price"></span></div>
+                                        <div class="text-[10px] text-gray-400 line-through">₹<span x-text="product.originalPrice"></span></div>
+                                    </div>
+
+                                    <template x-if="!getItemQty(product.id)">
+                                        <button @click="addToCart(product)" 
+                                                class="bg-brand-50 hover:bg-brand-600 text-brand-700 hover:text-white border border-brand-200 p-2 sm:px-3 sm:py-1.5 rounded-xl font-bold text-xs transition duration-200 flex items-center space-x-1">
+                                            <i class="fas fa-plus text-[10px]"></i>
+                                            <span>ADD</span>
+                                        </button>
+                                    </template>
+
+                                    <template x-if="getItemQty(product.id) > 0">
+                                        <div class="flex items-center bg-brand-600 text-white rounded-xl text-xs overflow-hidden shadow-sm">
+                                            <button @click="updateQty(product.id, -1)" class="px-2 py-1 hover:bg-brand-700 font-bold">-</button>
+                                            <span class="px-2 font-black text-xs" x-text="getItemQty(product.id)"></span>
+                                            <button @click="updateQty(product.id, 1)" class="px-2 py-1 hover:bg-brand-700 font-bold">+</button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </section>
+        </div>
+
+        <!-- MODULE 2: EMPLOYEE PACKING & DELIVERY PORTAL -->
+        <div x-show="currentView === 'employee'" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm mb-6 flex justify-between items-center flex-wrap gap-4">
+                <div>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full uppercase">Staff Workspace</span>
+                    <h1 class="text-2xl font-bold text-gray-900 mt-1">Fulfillment & Delivery Tasks</h1>
+                    <p class="text-xs text-gray-500">Assigned order packing and home delivery queues</p>
+                </div>
+                <div class="flex space-x-3">
+                    <span class="bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2 rounded-lg font-bold">
+                        <i class="fas fa-box-open mr-1"></i> Pending Packing: 3
+                    </span>
+                    <span class="bg-blue-50 border border-blue-200 text-blue-800 text-xs px-3 py-2 rounded-lg font-bold">
+                        <i class="fas fa-motorcycle mr-1"></i> Ready for Dispatch: 2
+                    </span>
+                </div>
+            </div>
+
+            <!-- Employee Order Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <template x-for="task in employeeTasks" :key="task.id">
+                    <div class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                        <div class="flex justify-between items-start border-b border-gray-100 pb-3">
+                            <div>
+                                <span class="text-xs font-mono font-bold text-gray-400" x-text="task.id"></span>
+                                <h3 class="font-bold text-gray-900" x-text="task.customerName"></h3>
+                                <p class="text-xs text-gray-500" x-text="task.address"></p>
+                            </div>
+                            <span :class="{
+                                'bg-amber-100 text-amber-800': task.status === 'Packing Required',
+                                'bg-blue-100 text-blue-800': task.status === 'Out for Delivery',
+                                'bg-emerald-100 text-emerald-800': task.status === 'Completed'
+                            }" class="text-[10px] font-black uppercase px-2.5 py-1 rounded-full" x-text="task.status"></span>
+                        </div>
+
+                        <div class="my-4">
+                            <h4 class="text-xs font-bold text-gray-700 uppercase mb-2">Order Items:</h4>
+                            <ul class="text-xs space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                <template x-for="item in task.items" :key="item">
+                                    <li class="flex items-center text-gray-700">
+                                        <i class="fas fa-check-circle text-brand-600 text-xs mr-2"></i>
+                                        <span x-text="item"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-2">
+                            <span class="text-xs font-bold text-gray-600">Total: ₹<span x-text="task.amount"></span></span>
+                            <div class="space-x-2">
+                                <button @click="updateTaskStatus(task.id)" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition">
+                                    <i class="fas fa-arrow-right mr-1"></i> Update Status
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Employee stock and inventory tools -->
+            <section class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm mt-6">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Inventory Stock Update</h2>
+                        <p class="text-xs text-gray-500">Employees can update available quantities and report low stock.</p>
+                    </div>
+                    <span class="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-2 rounded-lg"
+                          x-text="products.length + ' products'"></span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                            <tr><th class="p-3">Product</th><th class="p-3">Category</th><th class="p-3">Stock</th><th class="p-3">Update</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <template x-for="product in products" :key="product.id">
+                                <tr>
+                                    <td class="p-3 font-semibold" x-text="product.name"></td>
+                                    <td class="p-3 capitalize" x-text="product.category"></td>
+                                    <td class="p-3">
+                                        <span :class="(product.stock ?? 20) <= 5 ? 'text-red-600 font-bold' : 'text-gray-700'"
+                                              x-text="(product.stock ?? 20) + ' units'"></span>
+                                    </td>
+                                    <td class="p-3">
+                                        <div class="flex items-center gap-2">
+                                            <button @click="updateStock(product.id, -1)" class="border rounded-lg px-3 py-1 hover:bg-gray-100" title="Decrease stock">−</button>
+                                            <button @click="updateStock(product.id, 1)" class="border rounded-lg px-3 py-1 hover:bg-gray-100" title="Increase stock">+</button>
+                                            <button @click="updateStock(product.id, 5)" class="text-xs text-blue-700 font-bold hover:underline">+5</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-xs text-gray-500 mt-3">Stock changes are saved in this browser's Local Storage.</p>
+            </section>
+        </div>
+
+        <!-- MODULE 3: MANAGER DASHBOARD -->
+        <div x-show="currentView === 'manager'" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm mb-6 flex justify-between items-center flex-wrap gap-4">
+                <div>
+                    <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-1 rounded-full uppercase">Store Operations</span>
+                    <h1 class="text-2xl font-bold text-gray-900 mt-1">Manager Control Center</h1>
+                    <p class="text-xs text-gray-500">Monitor store metrics, assign staff duties, and handle stock</p>
+                </div>
+                <button @click="openAuthModal('customer')" class="bg-purple-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-purple-700 transition">
+                    <i class="fas fa-user-plus mr-1"></i> Register New Staff
+                </button>
+            </div>
+
+            <!-- Quick Metrics -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white p-4 rounded-2xl border border-gray-200">
+                    <span class="text-xs text-gray-500 font-semibold">Today's Revenue</span>
+                    <p class="text-2xl font-black text-gray-900 mt-1">₹48,920</p>
+                    <span class="text-[10px] text-emerald-600 font-bold">↑ +14% vs yesterday</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-gray-200">
+                    <span class="text-xs text-gray-500 font-semibold">Total Orders</span>
+                    <p class="text-2xl font-black text-gray-900 mt-1">142</p>
+                    <span class="text-[10px] text-brand-600 font-bold">98 Delivered</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-gray-200">
+                    <span class="text-xs text-gray-500 font-semibold">Active Staff</span>
+                    <p class="text-2xl font-black text-gray-900 mt-1">8 / 10</p>
+                    <span class="text-[10px] text-blue-600 font-bold">2 Delivery Boys On Field</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-gray-200">
+                    <span class="text-xs text-gray-500 font-semibold">Low Stock Alerts</span>
+                    <p class="text-2xl font-black text-red-600 mt-1">3 Items</p>
+                    <span class="text-[10px] text-red-500 font-bold">Reorder needed</span>
+                </div>
+            </div>
+
+            <!-- Task Assignment Table -->
+            <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+                <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-900 text-sm">Assign Orders to Employees</h3>
+                    <span class="text-xs text-gray-400">Real-time Task Allocation</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-500 font-bold uppercase border-b border-gray-100">
+                                <th class="p-3">Order ID</th>
+                                <th class="p-3">Customer</th>
+                                <th class="p-3">Items Count</th>
+                                <th class="p-3">Assignee Staff</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-gray-700">
+                            <tr>
+                                <td class="p-3 font-mono font-bold">#ORD-9021</td>
+                                <td class="p-3 font-semibold">Rahul Verma</td>
+                                <td class="p-3">6 Products</td>
+                                <td class="p-3">
+                                    <select class="border border-gray-200 rounded p-1 text-xs">
+                                        <option>Suresh Kumar (Packer)</option>
+                                        <option>Ramesh Singh (Rider)</option>
+                                    </select>
+                                </td>
+                                <td class="p-3"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] font-bold">Unassigned</span></td>
+                                <td class="p-3 text-right">
+                                    <button @click="alert('Task Assigned Successfully!')" class="bg-brand-600 text-white px-3 py-1 rounded font-bold hover:bg-brand-700">Assign Task</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-mono font-bold">#ORD-9022</td>
+                                <td class="p-3 font-semibold">Priya Sharma</td>
+                                <td class="p-3">3 Products</td>
+                                <td class="p-3">
+                                    <select class="border border-gray-200 rounded p-1 text-xs">
+                                        <option selected>Ramesh Singh (Rider)</option>
+                                        <option>Suresh Kumar (Packer)</option>
+                                    </select>
+                                </td>
+                                <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold">In Packing</span></td>
+                                <td class="p-3 text-right">
+                                    <button @click="alert('Re-assigned!')" class="bg-gray-200 text-gray-700 px-3 py-1 rounded font-bold hover:bg-gray-300">Re-assign</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Manager product management -->
+            <section class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm mt-6">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Product & Inventory Management</h2>
+                        <p class="text-xs text-gray-500">Add new products, edit details, update prices and manage stock.</p>
+                    </div>
+                    <span class="bg-purple-50 text-purple-700 px-3 py-2 rounded-lg text-xs font-bold"
+                          x-text="products.length + ' products in catalogue'"></span>
+                </div>
+
+                <form @submit.prevent="saveProduct()" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 bg-purple-50 p-4 rounded-xl mb-5">
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Product name</label>
+                        <input x-model="managerProductForm.name" required minlength="2" placeholder="e.g. Fresh Green Peas"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Category</label>
+                        <select x-model="managerProductForm.category" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            <option value="veggies">Vegetables</option><option value="fruits">Fruits</option>
+                            <option value="dairy">Dairy & Eggs</option><option value="staples">Atta & Rice</option>
+                            <option value="spices">Masalas & Spices</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Unit</label>
+                        <input x-model="managerProductForm.unit" required placeholder="1 kg"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Selling price (₹)</label>
+                        <input x-model.number="managerProductForm.price" type="number" min="1" required
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Original price (₹)</label>
+                        <input x-model.number="managerProductForm.originalPrice" type="number" min="1" required
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Stock quantity</label>
+                        <input x-model.number="managerProductForm.stock" type="number" min="0" required
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Image URL</label>
+                        <input x-model="managerProductForm.image" type="url" placeholder="https://..."
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div class="lg:col-span-4 flex flex-wrap gap-2">
+                        <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm px-5 py-2.5 rounded-lg"
+                                x-text="editingProductId ? 'Save Product Changes' : 'Add Product'"></button>
+                        <button type="button" x-show="editingProductId" @click="cancelProductEdit()"
+                                class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-sm px-5 py-2.5 rounded-lg">Cancel Edit</button>
+                    </div>
+                </form>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                            <tr><th class="p-3">Product</th><th class="p-3">Category</th><th class="p-3">Price</th><th class="p-3">Stock</th><th class="p-3">Actions</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <template x-for="product in products" :key="product.id">
+                                <tr>
+                                    <td class="p-3"><div class="font-semibold" x-text="product.name"></div><div class="text-xs text-gray-400" x-text="product.unit"></div></td>
+                                    <td class="p-3 capitalize" x-text="product.category"></td>
+                                    <td class="p-3 font-semibold">₹<span x-text="product.price"></span></td>
+                                    <td class="p-3" :class="(product.stock ?? 20) <= 5 ? 'text-red-600 font-bold' : ''" x-text="(product.stock ?? 20) + ' units'"></td>
+                                    <td class="p-3">
+                                        <div class="flex gap-2">
+                                            <button @click="editProduct(product)" class="text-blue-700 font-bold hover:underline">Edit</button>
+                                            <button @click="deleteProduct(product.id)" class="text-red-600 font-bold hover:underline">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Manager staff management -->
+            <section class="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm mt-6">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                    <div><h2 class="text-lg font-bold text-gray-900">Staff Management</h2>
+                    <p class="text-xs text-gray-500">Add staff records and manage the staff directory.</p></div>
+                </div>
+                <form @submit.prevent="addStaff()" class="grid grid-cols-1 md:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-xl mb-4">
+                    <input x-model="staffForm.name" required minlength="3" placeholder="Staff full name" class="border rounded-lg px-3 py-2 text-sm">
+                    <input x-model="staffForm.identifier" required placeholder="Staff email or ID" class="border rounded-lg px-3 py-2 text-sm">
+                    <select x-model="staffForm.role" class="border rounded-lg px-3 py-2 text-sm"><option value="employee">Employee</option><option value="manager">Manager</option></select>
+                    <button class="bg-gray-900 hover:bg-black text-white rounded-lg px-4 py-2 text-sm font-bold">Add Staff Record</button>
+                </form>
+                <div class="divide-y divide-gray-100">
+                    <template x-for="(staff, index) in staffMembers" :key="staff.identifier">
+                        <div class="py-3 flex flex-wrap justify-between items-center gap-2">
+                            <div><p class="font-semibold text-sm" x-text="staff.name"></p>
+                            <p class="text-xs text-gray-500"><span x-text="staff.identifier"></span> · <span class="capitalize" x-text="staff.role"></span></p></div>
+                            <button @click="removeStaff(index)" class="text-red-600 text-xs font-bold hover:underline">Remove record</button>
+                        </div>
+                    </template>
+                    <p x-show="staffMembers.length === 0" class="text-sm text-gray-500 py-3">No staff records added yet.</p>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-gray-400 text-xs py-10 mt-12 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+                <div class="flex items-center space-x-2 text-white font-bold text-lg mb-3">
+                    <i class="fas fa-shopping-basket text-brand-500"></i>
+                    <span>FreshBazaar India</span>
+                </div>
+                <p class="text-gray-400 leading-relaxed">Your daily source for fresh vegetables, fruits, staples, and quick kitchen essentials delivered in minutes.</p>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-3 uppercase tracking-wider">Popular Categories</h4>
+                <ul class="space-y-2">
+                    <li><a href="#" class="hover:text-white transition">Fresh Vegetables & Sabzi</a></li>
+                    <li><a href="#" class="hover:text-white transition">Farm Fruits</a></li>
+                    <li><a href="#" class="hover:text-white transition">Atta, Rice & Dal</a></li>
+                    <li><a href="#" class="hover:text-white transition">Dairy & Milk Products</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-3 uppercase tracking-wider">Accepted Payment Methods</h4>
+                <div class="flex flex-wrap gap-2 text-lg text-gray-300">
+                    <span class="bg-gray-800 px-2 py-1 rounded"><i class="fab fa-google-pay"></i> GPay</span>
+                    <span class="bg-gray-800 px-2 py-1 rounded"><i class="fas fa-mobile-alt"></i> PhonePe</span>
+                    <span class="bg-gray-800 px-2 py-1 rounded"><i class="fab fa-cc-visa"></i> Card</span>
+                    <span class="bg-gray-800 px-2 py-1 rounded"><i class="fas fa-money-bill-wave"></i> COD</span>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-3 uppercase tracking-wider">System Modules</h4>
+                <div class="space-y-2">
+                    <button @click="switchPortal('customer')" class="block text-brand-400 hover:underline">1. Customer Storefront</button>
+                    <button @click="switchPortal('employee')" class="block text-blue-400 hover:underline">2. Employee Work Desk</button>
+                    <button @click="switchPortal('manager')" class="block text-purple-400 hover:underline">3. Manager Admin Portal</button>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-6 border-t border-gray-800 text-center text-gray-500">
+            &copy; 2025 FreshBazaar Online Groceries Pvt. Ltd. All rights reserved. Prices inclusive of GST.
+        </div>
+    </footer>
+
+    <!-- CART SLIDE-OVER DRAWER -->
+    <div x-show="isCartOpen" class="fixed inset-0 z-50 overflow-hidden" x-cloak>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-xs transition-opacity" @click="isCartOpen = false"></div>
+        <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
+                
+                <!-- Drawer Header -->
+                <div class="p-4 bg-brand-700 text-white flex justify-between items-center">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-shopping-bag text-xl"></i>
+                        <h2 class="font-bold text-lg">My Grocery Basket</h2>
+                    </div>
+                    <button @click="isCartOpen = false" class="text-white hover:text-amber-300 p-1">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Cart Items List -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <template x-if="cart.length === 0">
+                        <div class="text-center py-16">
+                            <i class="fas fa-basket-shopping text-6xl text-gray-200 mb-4"></i>
+                            <p class="text-gray-500 font-medium text-sm">Your basket is empty!</p>
+                            <button @click="isCartOpen = false" class="mt-4 bg-brand-600 text-white font-bold text-xs px-5 py-2.5 rounded-full">Start Shopping</button>
+                        </div>
+                    </template>
+
+                    <template x-for="item in cart" :key="item.id">
+                        <div class="flex items-center space-x-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                            <img :src="item.image" :alt="item.name" class="w-14 h-14 object-cover rounded-xl">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-xs text-gray-800 line-clamp-1" x-text="item.name"></h4>
+                                <p class="text-[10px] text-gray-400" x-text="item.unit"></p>
+                                <div class="font-extrabold text-sm text-gray-900 mt-1">₹<span x-text="item.price * item.qty"></span></div>
+                            </div>
+                            <div class="flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden text-xs">
+                                <button @click="updateQty(item.id, -1)" class="px-2 py-1 bg-gray-100 hover:bg-gray-200 font-bold">-</button>
+                                <span class="px-2.5 font-bold" x-text="item.qty"></span>
+                                <button @click="updateQty(item.id, 1)" class="px-2 py-1 bg-gray-100 hover:bg-gray-200 font-bold">+</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Cart Summary & Checkout Button -->
+                <template x-if="cart.length > 0">
+                    <div class="p-4 bg-gray-50 border-t border-gray-200 space-y-3">
+                        <div class="space-y-1 text-xs">
+                            <div class="flex justify-between text-gray-600">
+                                <span>Item Subtotal</span>
+                                <span>₹<span x-text="cartSubtotal"></span></span>
+                            </div>
+                            <div class="flex justify-between text-gray-600">
+                                <span>Delivery Fee (15 min express)</span>
+                                <span class="text-brand-600 font-bold">FREE</span>
+                            </div>
+                            <div class="flex justify-between text-gray-600">
+                                <span>Handling & Taxes</span>
+                                <span>₹15</span>
+                            </div>
+                            <div class="flex justify-between text-base font-black text-gray-900 pt-2 border-t border-gray-200">
+                                <span>To Pay</span>
+                                <span>₹<span x-text="cartSubtotal + 15"></span></span>
+                            </div>
+                        </div>
+                        <button @click="proceedToCheckout()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-2xl shadow-lg transition flex justify-between items-center px-6">
+                            <span>Proceed to Payment</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </template>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTH MODAL (LOGIN & SIGNUP FOR 3 MODULES) -->
+    <div x-show="isAuthModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-xs" @click="isAuthModalOpen = false"></div>
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl z-10 overflow-hidden relative border border-gray-100">
+            
+            <button @click="isAuthModalOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+
+            <!-- Role Module Tab Header -->
+            <div class="text-center mb-6">
+                <h3 class="text-xl font-black text-gray-900">Portal Authentication</h3>
+                <p class="text-xs text-gray-500 mt-1">Select module role to log in</p>
+            </div>
+
+            <!-- Role Selection Tabs -->
+            <div class="grid grid-cols-3 gap-1 bg-gray-100 p-1.5 rounded-2xl mb-6 text-xs font-bold text-center">
+                <button @click="setAuthRole('customer')" 
+                        :class="authRole === 'customer' ? 'bg-white text-brand-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
+                        class="py-2 rounded-xl transition">
+                    Customer
+                </button>
+                <button @click="setAuthRole('employee')" 
+                        :class="authRole === 'employee' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
+                        class="py-2 rounded-xl transition">
+                    Employee
+                </button>
+                <button @click="setAuthRole('manager')" 
+                        :class="authRole === 'manager' ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'"
+                        class="py-2 rounded-xl transition">
+                    Manager
+                </button>
+            </div>
+
+            <!-- Notice / Toggle Sub-Header -->
+            <div class="mb-4">
+                <!-- CUSTOMER MODE TOGGLE -->
+                <template x-if="authRole === 'customer'">
+                    <div class="flex justify-center space-x-4 text-xs font-bold border-b border-gray-100 pb-2">
+                        <button @click="authMode = 'login'" :class="authMode === 'login' ? 'text-brand-600 border-b-2 border-brand-600 pb-1' : 'text-gray-400'">Sign In</button>
+                        <button @click="authMode = 'signup'" :class="authMode === 'signup' ? 'text-brand-600 border-b-2 border-brand-600 pb-1' : 'text-gray-400'">Create New Account</button>
+                    </div>
+                </template>
+
+                <!-- RESTRICTED SIGNUP NOTICE FOR EMPLOYEE & MANAGER -->
+                <template x-if="authRole !== 'customer'">
+                    <div class="bg-amber-50 border border-amber-200 text-amber-800 p-2.5 rounded-xl text-[11px] flex items-center space-x-2">
+                        <i class="fas fa-lock text-amber-600"></i>
+                        <span><b>Restricted Access:</b> Account registration disabled. Accounts created internally by HR/Admin.</span>
+                    </div>
+                </template>
+            </div>
+
+            <!-- AUTH FORM -->
+            <form @submit.prevent="handleAuthSubmit()" class="space-y-4">
+                <!-- Signup Name Field (Customer Only) -->
+                <template x-if="authRole === 'customer' && authMode === 'signup'">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Full Name</label>
+                        <input type="text" x-model="authForm.name" required placeholder="e.g. Rahul Sharma" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </template>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1" x-text="authRole === 'customer' ? 'Mobile Number or Email' : 'Staff ID / Corporate Email'"></label>
+                    <input type="text" x-model="authForm.identifier" required :placeholder="authRole === 'customer' ? '9876543210' : 'EMP-2025-XX'" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Password</label>
+                    <input type="password" x-model="authForm.password" required placeholder="At least 6 characters" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <p x-show="authError" x-text="authError" role="alert" class="text-xs font-semibold text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2"></p>
+
+                <button type="submit" 
+                        :class="{
+                            'bg-brand-600 hover:bg-brand-700': authRole === 'customer',
+                            'bg-blue-600 hover:bg-blue-700': authRole === 'employee',
+                            'bg-purple-600 hover:bg-purple-700': authRole === 'manager'
+                        }"
+                        class="w-full text-white font-bold py-3 rounded-xl text-xs shadow-md transition duration-200 mt-2">
+                    <span x-text="authRole === 'customer' ? (authMode === 'login' ? 'Login to Shop' : 'Register Account') : 'Authorize & Sign In'"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- CHECKOUT & PAYMENT MODAL -->
+    <div x-show="isCheckoutOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-xs" @click="isCheckoutOpen = false"></div>
+        <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl z-10 max-h-[90vh] overflow-y-auto relative">
+            
+            <button @click="isCheckoutOpen = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+
+            <!-- Step Indicator -->
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
+                <div class="flex items-center space-x-2">
+                    <span class="bg-brand-600 text-white font-bold h-6 w-6 rounded-full text-xs flex items-center justify-center" x-text="paymentStep"></span>
+                    <h3 class="font-bold text-gray-900 text-base" x-text="paymentStep === 1 ? 'Delivery Address' : (paymentStep === 2 ? 'Select Payment Method' : 'Order Placed Successful!')"></h3>
+                </div>
+                <span class="text-xs font-bold text-brand-700">Total: ₹<span x-text="cartSubtotal + 15"></span></span>
+            </div>
+
+            <!-- STEP 1: ADDRESS ENTRY -->
+            <div x-show="paymentStep === 1" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Receiver Name</label>
+                    <input type="text" x-model="checkoutAddress.name" placeholder="Full Name" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">Complete Address</label>
+                    <textarea x-model="checkoutAddress.street" placeholder="House/Flat No., Building Name, Street, Landmark" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-brand-500 outline-none" rows="2"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">City</label>
+                        <input type="text" x-model="checkoutAddress.city" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-brand-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Pincode</label>
+                        <input type="text" x-model="checkoutAddress.pincode" placeholder="400001" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-brand-500 outline-none">
+                    </div>
+                </div>
+                <button @click="paymentStep = 2" class="w-full bg-brand-600 text-white font-bold py-3 rounded-xl text-xs hover:bg-brand-700 transition mt-4">
+                    Proceed to Select Payment Options
+                </button>
+            </div>
+
+            <!-- STEP 2: MULTIPLE PAYMENT OPTIONS -->
+            <div x-show="paymentStep === 2" class="space-y-4">
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Choose Payment Option</p>
+                
+                <!-- Payment Options Radio Group -->
+                <div class="space-y-3">
+                    
+                    <!-- 1. UPI Payment -->
+                    <label :class="selectedPayment === 'upi' ? 'border-brand-600 bg-brand-50/40' : 'border-gray-200 bg-white'" 
+                           class="flex items-start p-3.5 border-2 rounded-2xl cursor-pointer transition">
+                        <input type="radio" name="payment" value="upi" x-model="selectedPayment" class="mt-1 text-brand-600 focus:ring-brand-500">
+                        <div class="ml-3 flex-1">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-xs text-gray-900">UPI Instant Payment (GPay, PhonePe, Paytm)</span>
+                                <span class="bg-emerald-100 text-emerald-800 text-[9px] font-extrabold px-2 py-0.5 rounded">FASTEST</span>
+                            </div>
+                            <div x-show="selectedPayment === 'upi'" class="mt-3 space-y-2">
+                                <input type="text" placeholder="Enter UPI ID (e.g. mobile@upi)" class="w-full bg-white border border-gray-300 rounded-lg p-2 text-xs">
+                                <div class="flex space-x-2 text-gray-500 text-xs">
+                                    <span class="bg-white border border-gray-200 px-2 py-1 rounded text-[10px]"><i class="fab fa-google-pay text-blue-600"></i> Google Pay</span>
+                                    <span class="bg-white border border-gray-200 px-2 py-1 rounded text-[10px]"><i class="fas fa-mobile-alt text-purple-600"></i> PhonePe</span>
+                                    <span class="bg-white border border-gray-200 px-2 py-1 rounded text-[10px]"><i class="fas fa-wallet text-sky-500"></i> Paytm</span>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- 2. Debit / Credit Card -->
+                    <label :class="selectedPayment === 'card' ? 'border-brand-600 bg-brand-50/40' : 'border-gray-200 bg-white'" 
+                           class="flex items-start p-3.5 border-2 rounded-2xl cursor-pointer transition">
+                        <input type="radio" name="payment" value="card" x-model="selectedPayment" class="mt-1 text-brand-600 focus:ring-brand-500">
+                        <div class="ml-3 flex-1">
+                            <span class="font-bold text-xs text-gray-900">Credit / Debit Card</span>
+                            <div x-show="selectedPayment === 'card'" class="mt-3 space-y-2">
+                                <input type="text" placeholder="Card Number (16 digits)" class="w-full bg-white border border-gray-300 rounded-lg p-2 text-xs">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" placeholder="MM/YY" class="bg-white border border-gray-300 rounded-lg p-2 text-xs">
+                                    <input type="password" placeholder="CVV" class="bg-white border border-gray-300 rounded-lg p-2 text-xs">
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- 3. Net Banking -->
+                    <label :class="selectedPayment === 'netbanking' ? 'border-brand-600 bg-brand-50/40' : 'border-gray-200 bg-white'" 
+                           class="flex items-start p-3.5 border-2 rounded-2xl cursor-pointer transition">
+                        <input type="radio" name="payment" value="netbanking" x-model="selectedPayment" class="mt-1 text-brand-600 focus:ring-brand-500">
+                        <div class="ml-3 flex-1">
+                            <span class="font-bold text-xs text-gray-900">Net Banking</span>
+                            <div x-show="selectedPayment === 'netbanking'" class="mt-3">
+                                <select class="w-full bg-white border border-gray-300 rounded-lg p-2 text-xs">
+                                    <option>State Bank of India (SBI)</option>
+                                    <option>HDFC Bank</option>
+                                    <option>ICICI Bank</option>
+                                    <option>Axis Bank</option>
+                                    <option>Kotak Mahindra Bank</option>
+                                </select>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- 4. Cash on Delivery (COD) -->
+                    <label :class="selectedPayment === 'cod' ? 'border-brand-600 bg-brand-50/40' : 'border-gray-200 bg-white'" 
+                           class="flex items-start p-3.5 border-2 rounded-2xl cursor-pointer transition">
+                        <input type="radio" name="payment" value="cod" x-model="selectedPayment" class="mt-1 text-brand-600 focus:ring-brand-500">
+                        <div class="ml-3 flex-1">
+                            <span class="font-bold text-xs text-gray-900">Cash on Delivery (COD)</span>
+                            <p class="text-[10px] text-gray-500">Pay cash or scan QR at the time of doorstep delivery.</p>
+                        </div>
+                    </label>
+
+                </div>
+
+                <div class="flex space-x-3 pt-3">
+                    <button @click="paymentStep = 1" class="w-1/3 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl text-xs hover:bg-gray-200 transition">Back</button>
+                    <button @click="completeOrder()" class="w-2/3 bg-brand-600 text-white font-bold py-3 rounded-xl text-xs hover:bg-brand-700 shadow-md transition">
+                        Pay & Confirm Order (₹<span x-text="cartSubtotal + 15"></span>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: ORDER PLACED SUCCESS -->
+            <div x-show="paymentStep === 3" class="text-center py-6 space-y-4">
+                <div class="h-20 w-20 bg-emerald-100 text-brand-600 rounded-full flex items-center justify-center mx-auto text-3xl">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-gray-900">Order Placed Successfully!</h2>
+                    <p class="text-xs text-gray-500 mt-1">Order ID: <span class="font-mono font-bold text-gray-800">#ORD-9023-IN</span></p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-left text-xs space-y-1">
+                    <p class="font-bold text-gray-800">Estimated Delivery: 15 Minutes</p>
+                    <p class="text-gray-500">Assigned Delivery Partner: Ramesh Singh</p>
+                    <p class="text-gray-500">Payment Mode: <span class="uppercase font-bold" x-text="selectedPayment"></span></p>
+                </div>
+                <button @click="isCheckoutOpen = false; cart = []; saveCart(); paymentStep = 1" class="w-full bg-brand-600 text-white font-bold py-3 rounded-xl text-xs hover:bg-brand-700 transition">
+                    Continue Shopping
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ALPINE JS LOGIC & STORE DATA -->
+    <script>
+        function groceryApp() {
+            return {
+                currentView: 'store', // 'store', 'employee', 'manager'
+                selectedCategory: 'all',
+                searchQuery: '',
+                isCartOpen: false,
+                isAuthModalOpen: false,
+                isCheckoutOpen: false,
+                paymentStep: 1,
+                selectedPayment: 'upi',
+                
+                // Auth States
+                authRole: 'customer', // 'customer', 'employee', 'manager'
+                authMode: 'login', // 'login', 'signup'
+                currentUser: null,
+                authError: '',
+                authForm: {
+                    name: '',
+                    identifier: '',
+                    password: ''
+                },
+
+                editingProductId: null,
+                managerProductForm: {
+                    name: '', category: 'veggies', unit: '1 kg', price: 1,
+                    originalPrice: 1, stock: 0, image: ''
+                },
+                staffForm: { name: '', identifier: '', role: 'employee' },
+                staffMembers: [],
+
+                // Checkout Form State
+                checkoutAddress: {
+                    name: 'Ananya Sharma',
+                    street: 'Flat 402, Green Valley Heights, MG Road',
+                    city: 'Mumbai',
+                    pincode: '400001'
+                },
+
+                // Grocery Categories
+                categories: [
+                    { id: 'veggies', name: 'Vegetables', icon: 'fas fa-carrot' },
+                    { id: 'fruits', name: 'Fresh Fruits', icon: 'fas fa-apple-whole' },
+                    { id: 'dairy', name: 'Dairy & Eggs', icon: 'fas fa-cheese' },
+                    { id: 'staples', name: 'Atta & Rice', icon: 'fas fa-wheat-awn' },
+                    { id: 'spices', name: 'Masalas & Spices', icon: 'fas fa-pepper-hot' }
+                ],
+
+                // Indian Grocery Catalog
+                products: [
+                    {
+                        id: 101,
+                        name: 'Fresh Farm Red Tomatoes',
+                        category: 'veggies',
+                        price: 38,
+                        originalPrice: 50,
+                        discount: 24,
+                        unit: '1 kg',
+                        rating: 4.8,
+                        reviews: 320,
+                        image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80'
+                    },
+                    {
+                        id: 102,
+                        name: 'Organic Red Onions (Pyaz)',
+                        category: 'veggies',
+                        price: 32,
+                        originalPrice: 45,
+                        discount: 28,
+                        unit: '1 kg',
+                        rating: 4.6,
+                        reviews: 410,
+                        image: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80'
+                    },
+                    {
+                        id: 103,
+                        name: 'Premium Alphonso Mangoes',
+                        category: 'fruits',
+                        price: 650,
+                        originalPrice: 850,
+                        discount: 23,
+                        unit: '1 Dozen',
+                        rating: 4.9,
+                        reviews: 890,
+                        image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=500&q=80'
+                    },
+                    {
+                        id: 104,
+                        name: 'Amul Pasteurised Butter',
+                        category: 'dairy',
+                        price: 275,
+                        originalPrice: 285,
+                        discount: 3,
+                        unit: '500 g',
+                        rating: 4.9,
+                        reviews: 1250,
+                        image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=500&q=80'
+                    },
+                    {
+                        id: 105,
+                        name: 'Aashirvaad Shudh Chakki Atta',
+                        category: 'staples',
+                        price: 245,
+                        originalPrice: 290,
+                        discount: 15,
+                        unit: '5 kg',
+                        rating: 4.8,
+                        reviews: 740,
+                        image: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80'
+                    },
+                    {
+                        id: 106,
+                        name: 'Everest Royal Garam Masala',
+                        category: 'spices',
+                        price: 92,
+                        originalPrice: 110,
+                        discount: 16,
+                        unit: '100 g',
+                        rating: 4.7,
+                        reviews: 230,
+                        image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80'
+                    },
+                    {
+                        id: 107,
+                        name: 'Premium Basmati Rice (Long Grain)',
+                        category: 'staples',
+                        price: 480,
+                        originalPrice: 580,
+                        discount: 17,
+                        unit: '5 kg',
+                        rating: 4.8,
+                        reviews: 512,
+                        image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80'
+                    },
+                    {
+                        id: 108,
+                        name: 'Fresh Green Capsicum (Shimla Mirch)',
+                        category: 'veggies',
+                        price: 45,
+                        originalPrice: 60,
+                        discount: 25,
+                        unit: '500 g',
+                        rating: 4.5,
+                        reviews: 180,
+                        image: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=500&q=80'
+                    },
+                    {
+                        id: 109,
+                        name: 'Fresh Full Cream Milk',
+                        category: 'dairy',
+                        price: 68,
+                        originalPrice: 72,
+                        discount: 5,
+                        unit: '1 L',
+                        rating: 4.9,
+                        reviews: 1900,
+                        image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&q=80'
+                    },
+                    {
+                        id: 110,
+                        name: 'Robusta Fresh Bananas',
+                        category: 'fruits',
+                        price: 48,
+                        originalPrice: 60,
+                        discount: 20,
+                        unit: '1 kg',
+                        rating: 4.6,
+                        reviews: 310,
+                        image: 'https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=500&q=80'
+                    },
+                    {
+                        id: 111,
+                        name: 'Fresh Malai Paneer Block',
+                        category: 'dairy',
+                        price: 115,
+                        originalPrice: 135,
+                        discount: 14,
+                        unit: '200 g',
+                        rating: 4.8,
+                        reviews: 640,
+                        image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&q=80'
+                    },
+                    {
+                        id: 112,
+                        name: 'Pure Cold Pressed Mustard Oil',
+                        category: 'staples',
+                        price: 175,
+                        originalPrice: 210,
+                        discount: 16,
+                        unit: '1 L',
+                        rating: 4.7,
+                        reviews: 420,
+                        image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80'
+                    },
+                    { id: 113, name: 'Fresh Farm Potatoes', category: 'veggies', price: 30, originalPrice: 40, discount: 25, unit: '1 kg', rating: 4.6, reviews: 280, image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80' },
+                    { id: 114, name: 'Fresh Carrots', category: 'veggies', price: 42, originalPrice: 55, discount: 24, unit: '1 kg', rating: 4.7, reviews: 190, image: 'https://images.unsplash.com/photo-1445282768818-728615cc910a?w=500&q=80' },
+                    { id: 115, name: 'Green Broccoli', category: 'veggies', price: 65, originalPrice: 80, discount: 19, unit: '500 g', rating: 4.5, reviews: 145, image: 'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=500&q=80' },
+                    { id: 116, name: 'Fresh Sweet Oranges', category: 'fruits', price: 85, originalPrice: 100, discount: 15, unit: '1 kg', rating: 4.6, reviews: 220, image: 'https://images.unsplash.com/photo-1547514701-42782101795e?w=500&q=80' },
+                    { id: 117, name: 'Red Seedless Grapes', category: 'fruits', price: 95, originalPrice: 120, discount: 21, unit: '500 g', rating: 4.7, reviews: 175, image: 'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=500&q=80' },
+                    { id: 118, name: 'Fresh Strawberries', category: 'fruits', price: 110, originalPrice: 140, discount: 21, unit: '250 g', rating: 4.8, reviews: 310, image: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=500&q=80' },
+                    { id: 119, name: 'Farm Fresh Eggs', category: 'dairy', price: 78, originalPrice: 90, discount: 13, unit: '6 pieces', rating: 4.8, reviews: 520, image: 'https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=500&q=80' },
+                    { id: 120, name: 'Natural Curd', category: 'dairy', price: 45, originalPrice: 55, discount: 18, unit: '500 g', rating: 4.6, reviews: 260, image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=500&q=80' },
+                    { id: 121, name: 'Premium Toor Dal', category: 'staples', price: 145, originalPrice: 165, discount: 12, unit: '1 kg', rating: 4.7, reviews: 430, image: 'https://images.unsplash.com/photo-1515543904379-3d757880e8d3?w=500&q=80' },
+                    { id: 122, name: 'Turmeric Powder', category: 'spices', price: 55, originalPrice: 65, discount: 15, unit: '200 g', rating: 4.8, reviews: 350, image: 'https://images.unsplash.com/photo-1615485500704-8e990f9900f5?w=500&q=80' },
+                    { id: 123, name: 'Fresh Cucumber', category: 'veggies', price: 28, originalPrice: 35, discount: 20, unit: '500 g', rating: 4.6, reviews: 165, stock: 25, image: 'https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=500&q=80' },
+                    { id: 124, name: 'Green Beans', category: 'veggies', price: 52, originalPrice: 65, discount: 20, unit: '500 g', rating: 4.5, reviews: 130, stock: 20, image: 'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?w=500&q=80' },
+                    { id: 125, name: 'Cauliflower', category: 'veggies', price: 38, originalPrice: 48, discount: 21, unit: '1 piece', rating: 4.6, reviews: 210, stock: 18, image: 'https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=500&q=80' },
+                    { id: 126, name: 'Fresh Spinach', category: 'veggies', price: 25, originalPrice: 30, discount: 17, unit: '1 bunch', rating: 4.7, reviews: 190, stock: 30, image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=500&q=80' },
+                    { id: 127, name: 'Red Bell Pepper', category: 'veggies', price: 72, originalPrice: 90, discount: 20, unit: '500 g', rating: 4.6, reviews: 115, stock: 16, image: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=500&q=80' },
+                    { id: 128, name: 'Fresh Green Peas', category: 'veggies', price: 60, originalPrice: 75, discount: 20, unit: '500 g', rating: 4.7, reviews: 145, stock: 22, image: 'https://images.unsplash.com/photo-1587735243615-c03f25aaff15?w=500&q=80' },
+                    { id: 129, name: 'Sweet Corn', category: 'veggies', price: 35, originalPrice: 45, discount: 22, unit: '2 pieces', rating: 4.5, reviews: 98, stock: 24, image: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=500&q=80' },
+                    { id: 130, name: 'Fresh Apples', category: 'fruits', price: 140, originalPrice: 165, discount: 15, unit: '1 kg', rating: 4.8, reviews: 510, stock: 28, image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=500&q=80' },
+                    { id: 131, name: 'Alphonso Mangoes', category: 'fruits', price: 180, originalPrice: 220, discount: 18, unit: '1 kg', rating: 4.9, reviews: 390, stock: 14, image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=500&q=80' },
+                    { id: 132, name: 'Pomegranate', category: 'fruits', price: 120, originalPrice: 145, discount: 17, unit: '1 kg', rating: 4.7, reviews: 260, stock: 19, image: 'https://images.unsplash.com/photo-1541344999736-83eca272f6fc?w=500&q=80' },
+                    { id: 133, name: 'Papaya', category: 'fruits', price: 48, originalPrice: 60, discount: 20, unit: '1 piece', rating: 4.5, reviews: 170, stock: 17, image: 'https://images.unsplash.com/photo-1517282009859-f000ec3b26fe?w=500&q=80' },
+                    { id: 134, name: 'Watermelon', category: 'fruits', price: 55, originalPrice: 70, discount: 21, unit: '1 piece', rating: 4.6, reviews: 205, stock: 12, image: 'https://images.unsplash.com/photo-1563114773-84221bd62daa?w=500&q=80' },
+                    { id: 135, name: 'Toned Milk', category: 'dairy', price: 58, originalPrice: 62, discount: 6, unit: '1 L', rating: 4.7, reviews: 870, stock: 35, image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&q=80' },
+                    { id: 136, name: 'Butter', category: 'dairy', price: 56, originalPrice: 62, discount: 10, unit: '100 g', rating: 4.8, reviews: 430, stock: 26, image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=500&q=80' },
+                    { id: 137, name: 'Cheddar Cheese', category: 'dairy', price: 115, originalPrice: 135, discount: 15, unit: '200 g', rating: 4.7, reviews: 320, stock: 15, image: 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=500&q=80' },
+                    { id: 138, name: 'Basmati Rice', category: 'staples', price: 125, originalPrice: 150, discount: 17, unit: '1 kg', rating: 4.8, reviews: 720, stock: 40, image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80' },
+                    { id: 139, name: 'Whole Wheat Atta', category: 'staples', price: 52, originalPrice: 60, discount: 13, unit: '1 kg', rating: 4.7, reviews: 610, stock: 38, image: 'https://images.unsplash.com/photo-1627485937980-221c88ac04f9?w=500&q=80' },
+                    { id: 140, name: 'Moong Dal', category: 'staples', price: 110, originalPrice: 125, discount: 12, unit: '1 kg', rating: 4.6, reviews: 380, stock: 31, image: 'https://images.unsplash.com/photo-1515543904379-3d757880e8d3?w=500&q=80' },
+                    { id: 141, name: 'Chana Dal', category: 'staples', price: 92, originalPrice: 105, discount: 12, unit: '1 kg', rating: 4.6, reviews: 290, stock: 29, image: 'https://images.unsplash.com/photo-1515543904379-3d757880e8d3?w=500&q=80' },
+                    { id: 142, name: 'Red Chilli Powder', category: 'spices', price: 48, originalPrice: 58, discount: 17, unit: '200 g', rating: 4.7, reviews: 410, stock: 27, image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80' },
+                    { id: 143, name: 'Coriander Powder', category: 'spices', price: 42, originalPrice: 50, discount: 16, unit: '200 g', rating: 4.6, reviews: 305, stock: 24, image: 'https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=500&q=80' },
+                    { id: 144, name: 'Cumin Seeds', category: 'spices', price: 38, originalPrice: 45, discount: 16, unit: '100 g', rating: 4.8, reviews: 275, stock: 21, image: 'https://images.unsplash.com/photo-1599909533608-3f7f7f0e6e0f?w=500&q=80' },
+                    { id: 145, name: 'Sunflower Cooking Oil', category: 'staples', price: 155, originalPrice: 180, discount: 14, unit: '1 L', rating: 4.7, reviews: 530, stock: 33, image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80' }
+                ],
+
+                // Cart and signed-in session are restored from localStorage.
+                cart: [],
+
+                init() {
+                    try {
+                        this.cart = JSON.parse(localStorage.getItem('freshBazaarCart') || '[]');
+                        this.currentUser = JSON.parse(localStorage.getItem('freshBazaarCurrentUser') || 'null');
+                    } catch (error) {
+                        this.cart = [];
+                        this.currentUser = null;
+                    }
+                    if (!Array.isArray(this.cart)) this.cart = [];
+                    try {
+                        const savedProducts = JSON.parse(localStorage.getItem('freshBazaarProducts') || 'null');
+                        if (Array.isArray(savedProducts) && savedProducts.length) {
+                            const savedById = new Map(savedProducts.map(product => [product.id, product]));
+                            this.products = this.products.map(product => ({ ...product, ...(savedById.get(product.id) || {}) }));
+                            const defaultIds = new Set(this.products.map(product => product.id));
+                            savedProducts.forEach(product => {
+                                if (!defaultIds.has(product.id)) this.products.push(product);
+                            });
+                        }
+                        this.staffMembers = JSON.parse(localStorage.getItem('freshBazaarStaff') || '[]');
+                        if (!Array.isArray(this.staffMembers)) this.staffMembers = [];
+                        const savedTasks = JSON.parse(localStorage.getItem('freshBazaarTasks') || 'null');
+                        if (Array.isArray(savedTasks)) this.employeeTasks = savedTasks;
+                    } catch (error) {
+                        this.staffMembers = [];
+                    }
+                    this.products = this.products.map(product => ({ stock: 20, ...product }));
+                    if (this.currentUser) {
+                        this.currentView = this.currentUser.role === 'employee' ? 'employee'
+                            : (this.currentUser.role === 'manager' ? 'manager' : 'store');
+                    }
+                },
+
+                saveCart() {
+                    localStorage.setItem('freshBazaarCart', JSON.stringify(this.cart));
+                },
+
+                // Mock Employee Task Data
+                employeeTasks: [
+                    {
+                        id: '#ORD-9021',
+                        customerName: 'Rahul Verma',
+                        address: 'Flat 102, Sunrise Apt, Bandra, Mumbai',
+                        status: 'Packing Required',
+                        items: ['2x Red Tomatoes (1kg)', '1x Aashirvaad Atta 5kg', '1x Amul Butter 500g'],
+                        amount: 606
+                    },
+                    {
+                        id: '#ORD-9022',
+                        customerName: 'Priya Sharma',
+                        address: 'B-14, Green Park, Andheri, Mumbai',
+                        status: 'Out for Delivery',
+                        items: ['1x Alphonso Mangoes', '2x Fresh Milk 1L'],
+                        amount: 786
+                    }
+                ],
+
+                // Filtered products list
+                get filteredProducts() {
+                    return this.products.filter(p => {
+                        const matchesCategory = this.selectedCategory === 'all' || p.category === this.selectedCategory;
+                        const matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        return matchesCategory && matchesSearch;
+                    });
+                },
+
+                // Cart Count and Total
+                get cartCount() {
+                    return this.cart.reduce((sum, item) => sum + item.qty, 0);
+                },
+
+                get cartSubtotal() {
+                    return this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                },
+
+                getItemQty(productId) {
+                    const item = this.cart.find(i => i.id === productId);
+                    return item ? item.qty : 0;
+                },
+
+                addToCart(product) {
+                    const existing = this.cart.find(i => i.id === product.id);
+                    if (existing) {
+                        existing.qty++;
+                    } else {
+                        this.cart.push({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            unit: product.unit,
+                            qty: 1,
+                            image: product.image
+                        });
+                    }
+                    this.saveCart();
+                },
+
+                updateQty(productId, delta) {
+                    const idx = this.cart.findIndex(i => i.id === productId);
+                    if (idx !== -1) {
+                        this.cart[idx].qty += delta;
+                        if (this.cart[idx].qty <= 0) {
+                            this.cart.splice(idx, 1);
+                        }
+                        this.saveCart();
+                    }
+                },
+
+                saveProducts() {
+                    localStorage.setItem('freshBazaarProducts', JSON.stringify(this.products));
+                },
+
+                updateStock(productId, change) {
+                    const product = this.products.find(item => item.id === productId);
+                    if (!product) return;
+                    product.stock = Math.max(0, Number(product.stock || 0) + change);
+                    this.saveProducts();
+                },
+
+                resetProductForm() {
+                    this.managerProductForm = {
+                        name: '', category: 'veggies', unit: '1 kg', price: 1,
+                        originalPrice: 1, stock: 0, image: ''
+                    };
+                },
+
+                saveProduct() {
+                    const form = this.managerProductForm;
+                    if (!form.name.trim() || Number(form.price) <= 0 || Number(form.stock) < 0) {
+                        alert('Please enter a valid product name, price and stock quantity.');
+                        return;
+                    }
+                    const productData = {
+                        name: form.name.trim(),
+                        category: form.category,
+                        unit: form.unit.trim(),
+                        price: Number(form.price),
+                        originalPrice: Number(form.originalPrice) || Number(form.price),
+                        discount: Math.max(0, Math.round((1 - Number(form.price) / (Number(form.originalPrice) || Number(form.price))) * 100)),
+                        stock: Number(form.stock),
+                        rating: 4.5,
+                        reviews: 0,
+                        image: form.image.trim() || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80'
+                    };
+                    if (this.editingProductId !== null) {
+                        const index = this.products.findIndex(item => item.id === this.editingProductId);
+                        if (index !== -1) this.products[index] = { ...this.products[index], ...productData };
+                        alert('Product updated successfully.');
+                    } else {
+                        const nextId = Math.max(100, ...this.products.map(item => Number(item.id) || 0)) + 1;
+                        this.products.push({ id: nextId, ...productData });
+                        alert('New product added successfully.');
+                    }
+                    this.saveProducts();
+                    this.cancelProductEdit();
+                },
+
+                editProduct(product) {
+                    this.editingProductId = product.id;
+                    this.managerProductForm = {
+                        name: product.name,
+                        category: product.category,
+                        unit: product.unit,
+                        price: Number(product.price),
+                        originalPrice: Number(product.originalPrice || product.price),
+                        stock: Number(product.stock || 0),
+                        image: product.image || ''
+                    };
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                },
+
+                cancelProductEdit() {
+                    this.editingProductId = null;
+                    this.resetProductForm();
+                },
+
+                deleteProduct(productId) {
+                    const product = this.products.find(item => item.id === productId);
+                    if (!product) return;
+                    if (!confirm('Delete "' + product.name + '" from the catalogue?')) return;
+                    this.products = this.products.filter(item => item.id !== productId);
+                    this.saveProducts();
+                    if (this.editingProductId === productId) this.cancelProductEdit();
+                },
+
+                addStaff() {
+                    const name = this.staffForm.name.trim();
+                    const identifier = this.staffForm.identifier.trim().toLowerCase();
+                    if (name.length < 3 || !identifier) {
+                        alert('Enter a valid staff name and email or ID.');
+                        return;
+                    }
+                    if (this.staffMembers.some(person => person.identifier.toLowerCase() === identifier)) {
+                        alert('A staff record with this email or ID already exists.');
+                        return;
+                    }
+                    this.staffMembers.push({ name, identifier, role: this.staffForm.role });
+                    localStorage.setItem('freshBazaarStaff', JSON.stringify(this.staffMembers));
+                    this.staffForm = { name: '', identifier: '', role: 'employee' };
+                    alert('Staff record added. This creates a directory entry only; it does not create login credentials.');
+                },
+
+                removeStaff(index) {
+                    if (!confirm('Remove this staff record?')) return;
+                    this.staffMembers.splice(index, 1);
+                    localStorage.setItem('freshBazaarStaff', JSON.stringify(this.staffMembers));
+                },
+
+                openAuthModal(role = 'customer') {
+                    this.setAuthRole(role);
+                    this.isAuthModalOpen = true;
+                },
+
+                setAuthRole(role) {
+                    this.authError = '';
+                    this.authRole = role;
+                    // Force login mode for non-customers because signup is disabled for them
+                    if (role !== 'customer') {
+                        this.authMode = 'login';
+                    }
+                },
+
+                handleAuthSubmit() {
+                    const identifier = this.authForm.identifier.trim().toLowerCase();
+                    const password = this.authForm.password;
+                    const name = this.authForm.name.trim();
+                    this.authError = '';
+
+                    if (!identifier) {
+                        this.authError = 'Please enter your mobile number or email address.';
+                        return;
+                    }
+
+                    if (this.authRole === 'customer' && this.authMode === 'signup') {
+                        if (name.length < 3) {
+                            this.authError = 'Full name must contain at least 3 characters.';
+                            return;
+                        }
+                        const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+                        const validMobile = /^\d{10}$/.test(identifier);
+                        if (!validEmail && !validMobile) {
+                            this.authError = 'Enter a valid email address or a 10-digit mobile number.';
+                            return;
+                        }
+                        if (password.length < 6) {
+                            this.authError = 'Password must contain at least 6 characters.';
+                            return;
+                        }
+
+                        let users = [];
+                        try {
+                            users = JSON.parse(localStorage.getItem('freshBazaarUsers') || '[]');
+                        } catch (error) {
+                            users = [];
+                        }
+                        if (users.some(user => user.identifier === identifier)) {
+                            this.authError = 'This email or mobile number is already registered. Please sign in.';
+                            return;
+                        }
+                        const newUser = { name, identifier, password, role: 'customer' };
+                        users.push(newUser);
+                        localStorage.setItem('freshBazaarUsers', JSON.stringify(users));
+                        this.loginUser(newUser);
+                        return;
+                    }
+
+                    if (this.authRole === 'customer') {
+                        let users = [];
+                        try {
+                            users = JSON.parse(localStorage.getItem('freshBazaarUsers') || '[]');
+                        } catch (error) {
+                            users = [];
+                        }
+                        const matchedUser = users.find(user =>
+                            user.identifier === identifier && user.password === password
+                        );
+                        if (!matchedUser) {
+                            this.authError = 'Incorrect email/mobile number or password. Please try again.';
+                            return;
+                        }
+                        this.loginUser(matchedUser);
+                        return;
+                    }
+
+                    // Demo staff accounts. Real staff registration remains restricted to HR/Admin.
+                    const staffAccounts = {
+                        employee: { identifier: 'emp-2025-01', password: 'employee123', name: 'Suresh (Staff)' },
+                        manager: { identifier: 'manager@freshbazaar.in', password: 'manager123', name: 'Rajesh (Store Manager)' }
+                    };
+                    const staff = staffAccounts[this.authRole];
+                    if (!staff || identifier !== staff.identifier || password !== staff.password) {
+                        this.authError = this.authRole === 'employee'
+                            ? 'Invalid staff credentials. Demo: EMP-2025-01 / employee123'
+                            : 'Invalid manager credentials. Demo: manager@freshbazaar.in / manager123';
+                        return;
+                    }
+                    this.loginUser({ name: staff.name, identifier: staff.identifier, role: this.authRole });
+                },
+
+                loginUser(user) {
+                    this.currentUser = {
+                        name: user.name,
+                        identifier: user.identifier,
+                        role: user.role
+                    };
+                    localStorage.setItem('freshBazaarCurrentUser', JSON.stringify(this.currentUser));
+                    this.currentView = user.role === 'customer' ? 'store'
+                        : (user.role === 'employee' ? 'employee' : 'manager');
+                    this.isAuthModalOpen = false;
+                    this.authError = '';
+                    this.authForm = { name: '', identifier: '', password: '' };
+                },
+
+                logout() {
+                    this.currentUser = null;
+                    localStorage.removeItem('freshBazaarCurrentUser');
+                    this.currentView = 'store';
+                },
+
+                switchPortal(portalRole) {
+                    if (!this.currentUser || this.currentUser.role !== portalRole) {
+                        this.openAuthModal(portalRole);
+                        return;
+                    }
+                    this.currentView = portalRole;
+                },
+
+                proceedToCheckout() {
+                    this.isCartOpen = false;
+                    this.paymentStep = 1;
+                    this.isCheckoutOpen = true;
+                },
+
+                completeOrder() {
+                    this.paymentStep = 3;
+                },
+
+                updateTaskStatus(taskId) {
+                    const task = this.employeeTasks.find(t => t.id === taskId);
+                    if (task) {
+                        if (task.status === 'Packing Required') task.status = 'Out for Delivery';
+                        else if (task.status === 'Out for Delivery') task.status = 'Completed';
+                        else {
+                            alert('Order is already completed!');
+                            return;
+                        }
+                        localStorage.setItem('freshBazaarTasks', JSON.stringify(this.employeeTasks));
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+        </body>
+        </html>
+      
